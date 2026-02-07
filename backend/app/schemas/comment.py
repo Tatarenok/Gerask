@@ -15,7 +15,7 @@ class UserShort(BaseModel):
 # ========== Комментарии ==========
 
 class CommentCreate(BaseModel):
-    content: str  # HTML контент
+    content: str
 
 
 class CommentUpdate(BaseModel):
@@ -55,6 +55,20 @@ class HistoryResponse(BaseModel):
     old_value: Optional[str]
     new_value: Optional[str]
     user: UserShort
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+# ========== Уведомления ==========
+
+class NotificationResponse(BaseModel):
+    id: int
+    type: str
+    message: str
+    is_read: bool
+    ticket_id: Optional[int]
     created_at: datetime
     
     class Config:

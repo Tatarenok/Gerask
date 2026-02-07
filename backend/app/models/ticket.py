@@ -9,6 +9,7 @@ from app.database import Base
 class TicketStatus(str, Enum):
     OPEN = "open"
     IN_PROGRESS = "in_progress"
+    WAITING = "waiting"
     DONE = "done"
     CLOSED = "closed"
 

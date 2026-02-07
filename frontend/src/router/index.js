@@ -1,34 +1,44 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from "vue-router";
 
 const routes = [
   {
-    path: '/login',
-    name: 'Login',
-    component: () => import('../views/LoginView.vue')
+    path: "/login",
+    name: "Login",
+    component: () => import("../views/LoginView.vue"),
   },
   {
-    path: '/',
-    name: 'Home',
-    component: () => import('../views/HomeView.vue'),
-    meta: { requiresAuth: true }
+    path: "/",
+    name: "Home",
+    component: () => import("../views/HomeView.vue"),
+    meta: { requiresAuth: true },
   },
-]
+  {
+    path: "/ticket/:key",
+    name: "Ticket",
+    component: () => import("../views/HomeView.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/:pathMatch(.*)*",
+    redirect: "/",
+  },
+];
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
-})
+  routes,
+});
 
 router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token')
-  
-  if (to.meta.requiresAuth && !token) {
-    next('/login')
-  } else if (to.path === '/login' && token) {
-    next('/')
-  } else {
-    next()
-  }
-})
+  const token = localStorage.getItem("token");
 
-export default router
+  if (to.meta.requiresAuth && !token) {
+    next("/login");
+  } else if (to.path === "/login" && token) {
+    next("/");
+  } else {
+    next();
+  }
+});
+
+export default router;
