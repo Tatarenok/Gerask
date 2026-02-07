@@ -8,7 +8,7 @@
               <v-toolbar-title
                 >🎫
                 {{
-                  isRegister ? "Регистрация" : "TicketSystem - Вход"
+                  isRegister ? "Регистрация" : "Gerask - Вход"
                 }}</v-toolbar-title
               >
             </v-toolbar>

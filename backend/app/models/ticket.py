@@ -1,20 +1,19 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum
+from enum import Enum
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-import enum
 
 from app.database import Base
 
 
-class TicketStatus(str, enum.Enum):
+class TicketStatus(str, Enum):
     OPEN = "open"
     IN_PROGRESS = "in_progress"
-    WAITING = "waiting"
     DONE = "done"
     CLOSED = "closed"
 
 
-class TicketPriority(str, enum.Enum):
+class TicketPriority(str, Enum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -25,24 +24,25 @@ class Ticket(Base):
     __tablename__ = "tickets"
     
     id = Column(Integer, primary_key=True, index=True)
-    key = Column(String(20), unique=True, nullable=False, index=True)  # ASU-1, DEVASU-1
+    key = Column(String(50), unique=True, nullable=False, index=True)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    
     status = Column(String(20), default=TicketStatus.OPEN.value)
     priority = Column(String(20), default=TicketPriority.MEDIUM.value)
     
     author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     assignee_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False)  # Для определения префикса
+    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
     
-    deadline = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Время работы (в секундах)
-    time_spent = Column(Integer, default=0)
+    # Таймер
     timer_started_at = Column(DateTime, nullable=True)
+    time_spent = Column(Integer, default=0)
+    
+    # Даты
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # ⭐ ДОБАВЛЕНО
+    resolved_at = Column(DateTime, nullable=True)
+    deadline = Column(DateTime, nullable=True)
     
     # Связи
     author = relationship("User", foreign_keys=[author_id], backref="created_tickets")
