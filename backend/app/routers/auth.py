@@ -20,6 +20,7 @@ def get_current_user(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
     db: Session = Depends(get_db)
 ) -> User:
+    """Получить текущего пользователя по токену"""
     token = credentials.credentials
     payload = decode_token(token)
     
@@ -40,8 +41,17 @@ def get_current_user(
     return user
 
 
+def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Проверка что пользователь — админ"""
+    if not current_user.role.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    return current_user
+
+
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
+    """Регистрация нового пользователя с ролью reader по умолчанию"""
+    
     if user_data.password != user_data.password_confirm:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Passwords do not match")
     
@@ -49,10 +59,21 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     if existing:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists")
     
-    # Роль reader по умолчанию
-    reader_role = db.query(Role).filter(Roder").first()
+    # Ищем роль reader
+    reader_role = db.query(Role).filter(Role.name == "reader").first()
+    
     if not reader_role:
-        raise HTTPException(status_code=500, detail="Default role not found")
+        # Если роли нет — создаём её
+        logger.warning("Role 'reader' not found, creating...")
+        reader_role = Role(
+            name="reader",
+            display_name="Читатель",
+            prefix=None,
+            is_admin=False
+        )
+        db.add(reader_role)
+        db.commit()
+        db.refresh(reader_role)
     
     user = User(
         login=user_data.login,
@@ -71,9 +92,12 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=Token)
 def login(user_data: UserLogin, db: Session = Depends(get_db)):
+    """Авторизация пользователя"""
+    
     user = db.query(User).filter(User.login == user_data.login).first()
     
     if not user or not verify_password(user_data.password, user.password_hash):
+        log_action(None, "LOGIN_FAILED", {"login": user_data.login})
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid login or password")
     
     if not user.is_active:
@@ -90,4 +114,5 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)):
+    """Получить данные текущего пользователя"""
     return current_user

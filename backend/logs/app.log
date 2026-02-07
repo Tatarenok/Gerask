@@ -329,3 +329,170 @@
 {"message": "OPTIONS /api/tickets/roles - 200 - 0.26ms", "taskName": "Task-126", "timestamp": "2026-02-07T09:53:57.444715", "level": "INFO", "app": "TicketSystem"}
 {"message": "GET /api/tickets/roles - 200 - 5.19ms", "taskName": "Task-131", "timestamp": "2026-02-07T09:53:57.451261", "level": "INFO", "app": "TicketSystem"}
 {"message": "Shutting down", "taskName": "Task-2", "timestamp": "2026-02-07T09:57:09.076579", "level": "INFO", "app": "TicketSystem"}
+{"message": "Starting TicketSystem", "taskName": "Task-2", "timestamp": "2026-02-07T10:53:07.192311", "level": "INFO", "app": "TicketSystem"}
+{"message": "Initializing database tables...", "taskName": "Task-2", "timestamp": "2026-02-07T10:53:07.192903", "level": "INFO", "app": "TicketSystem"}
+{"message": "Database tables created successfully", "taskName": "Task-2", "timestamp": "2026-02-07T10:53:07.249334", "level": "INFO", "app": "TicketSystem"}
+{"message": "Roles already exist", "taskName": "Task-2", "timestamp": "2026-02-07T10:53:07.278997", "level": "INFO", "app": "TicketSystem"}
+{"message": "Shutting down TicketSystem", "taskName": "Task-2", "timestamp": "2026-02-07T10:53:09.088615", "level": "INFO", "app": "TicketSystem"}
+{"message": "Starting TicketSystem", "taskName": "Task-2", "timestamp": "2026-02-07T10:53:11.731590", "level": "INFO", "app": "TicketSystem"}
+{"message": "Initializing database tables...", "taskName": "Task-2", "timestamp": "2026-02-07T10:53:11.731740", "level": "INFO", "app": "TicketSystem"}
+{"message": "Database tables created successfully", "taskName": "Task-2", "timestamp": "2026-02-07T10:53:11.762499", "level": "INFO", "app": "TicketSystem"}
+{"message": "Roles already exist", "taskName": "Task-2", "timestamp": "2026-02-07T10:53:11.782320", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/auth/login - 200 - 0.5ms", "taskName": "Task-3", "timestamp": "2026-02-07T10:53:21.828145", "level": "INFO", "app": "TicketSystem"}
+{"message": "ACTION: LOGIN_SUCCESS", "taskName": null, "user_id": 1, "action": "LOGIN_SUCCESS", "details": {"login": "admin"}, "timestamp": "2026-02-07T10:53:22.131413", "level": "INFO", "app": "TicketSystem"}
+{"message": "POST /api/auth/login - 200 - 302.87ms", "taskName": "Task-8", "timestamp": "2026-02-07T10:53:22.132678", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/auth/me - 200 - 0.27ms", "taskName": "Task-14", "timestamp": "2026-02-07T10:53:22.173339", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 24.44ms", "taskName": "Task-19", "timestamp": "2026-02-07T10:53:22.199487", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/tickets/users - 200 - 0.25ms", "taskName": "Task-24", "timestamp": "2026-02-07T10:53:22.208154", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/users - 200 - 5.67ms", "taskName": "Task-29", "timestamp": "2026-02-07T10:53:22.215580", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/users/roles - 200 - 0.26ms", "taskName": "Task-34", "timestamp": "2026-02-07T10:53:22.218613", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/users/roles - 200 - 6.85ms", "taskName": "Task-39", "timestamp": "2026-02-07T10:53:22.227192", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/tickets - 200 - 0.28ms", "taskName": "Task-44", "timestamp": "2026-02-07T10:53:22.231556", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 99.93ms", "taskName": "Task-49", "timestamp": "2026-02-07T10:53:22.333103", "level": "INFO", "app": "TicketSystem"}
+{"message": "ACTION: LOGIN_SUCCESS", "taskName": null, "user_id": 3, "action": "LOGIN_SUCCESS", "details": {"login": "nnurmuhamedov"}, "timestamp": "2026-02-07T10:53:44.053118", "level": "INFO", "app": "TicketSystem"}
+{"message": "POST /api/auth/login - 200 - 293.33ms", "taskName": "Task-54", "timestamp": "2026-02-07T10:53:44.054992", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 8.04ms", "taskName": "Task-60", "timestamp": "2026-02-07T10:53:55.644457", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/users - 200 - 9.46ms", "taskName": "Task-65", "timestamp": "2026-02-07T10:53:55.672908", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/users/roles - 200 - 44.49ms", "taskName": "Task-70", "timestamp": "2026-02-07T10:53:55.730921", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 20.66ms", "taskName": "Task-75", "timestamp": "2026-02-07T10:53:55.754747", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/tickets/roles - 200 - 0.28ms", "taskName": "Task-80", "timestamp": "2026-02-07T10:54:08.141627", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/roles - 200 - 4.15ms", "taskName": "Task-85", "timestamp": "2026-02-07T10:54:08.147211", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/auth/register - 200 - 0.24ms", "taskName": "Task-90", "timestamp": "2026-02-07T10:54:53.579225", "level": "INFO", "app": "TicketSystem"}
+{"message": "Role 'reader' not found, creating...", "taskName": null, "timestamp": "2026-02-07T10:54:53.587866", "level": "WARNING", "app": "TicketSystem"}
+{"message": "Shutting down TicketSystem", "taskName": "Task-2", "timestamp": "2026-02-07T10:59:26.667837", "level": "INFO", "app": "TicketSystem"}
+{"message": "Starting TicketSystem", "taskName": "Task-2", "timestamp": "2026-02-07T10:59:30.104952", "level": "INFO", "app": "TicketSystem"}
+{"message": "Initializing database tables...", "taskName": "Task-2", "timestamp": "2026-02-07T10:59:30.108787", "level": "INFO", "app": "TicketSystem"}
+{"message": "Database tables created successfully", "taskName": "Task-2", "timestamp": "2026-02-07T10:59:30.176835", "level": "INFO", "app": "TicketSystem"}
+{"message": "Roles already exist", "taskName": "Task-2", "timestamp": "2026-02-07T10:59:30.216332", "level": "INFO", "app": "TicketSystem"}
+{"message": "Shutting down TicketSystem", "taskName": "Task-2", "timestamp": "2026-02-07T10:59:41.801072", "level": "INFO", "app": "TicketSystem"}
+{"message": "Starting TicketSystem", "taskName": "Task-2", "timestamp": "2026-02-07T10:59:43.303227", "level": "INFO", "app": "TicketSystem"}
+{"message": "Initializing database tables...", "taskName": "Task-2", "timestamp": "2026-02-07T10:59:43.303423", "level": "INFO", "app": "TicketSystem"}
+{"message": "Database tables created successfully", "taskName": "Task-2", "timestamp": "2026-02-07T10:59:43.362704", "level": "INFO", "app": "TicketSystem"}
+{"message": "Roles already exist", "taskName": "Task-2", "timestamp": "2026-02-07T10:59:43.383929", "level": "INFO", "app": "TicketSystem"}
+{"message": "ACTION: LOGIN_SUCCESS", "taskName": null, "user_id": 1, "action": "LOGIN_SUCCESS", "details": {"login": "admin"}, "timestamp": "2026-02-07T10:59:59.669812", "level": "INFO", "app": "TicketSystem"}
+{"message": "POST /api/auth/login - 200 - 281.79ms", "taskName": "Task-3", "timestamp": "2026-02-07T10:59:59.671178", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 15.74ms", "taskName": "Task-9", "timestamp": "2026-02-07T11:00:03.118584", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/users - 200 - 9.12ms", "taskName": "Task-14", "timestamp": "2026-02-07T11:00:03.135489", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/users/roles - 200 - 54.46ms", "taskName": "Task-19", "timestamp": "2026-02-07T11:00:03.208096", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 10.44ms", "taskName": "Task-24", "timestamp": "2026-02-07T11:00:03.221002", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/tickets/DEVASU-1 - 200 - 0.33ms", "taskName": "Task-29", "timestamp": "2026-02-07T11:01:00.040072", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/DEVASU-1 - 200 - 9.56ms", "taskName": "Task-34", "timestamp": "2026-02-07T11:01:00.051189", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/tickets/ASU-2 - 200 - 0.35ms", "taskName": "Task-39", "timestamp": "2026-02-07T11:01:00.490040", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/ASU-2 - 200 - 10.14ms", "taskName": "Task-44", "timestamp": "2026-02-07T11:01:00.501803", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/tickets/ASU-2 - 200 - 0.25ms", "taskName": "Task-49", "timestamp": "2026-02-07T11:01:17.273726", "level": "INFO", "app": "TicketSystem"}
+{"message": "Shutting down TicketSystem", "taskName": "Task-2", "timestamp": "2026-02-07T11:02:08.078217", "level": "INFO", "app": "TicketSystem"}
+{"message": "Starting TicketSystem", "taskName": "Task-2", "timestamp": "2026-02-07T11:02:28.673973", "level": "INFO", "app": "TicketSystem"}
+{"message": "Initializing database tables...", "taskName": "Task-2", "timestamp": "2026-02-07T11:02:28.674144", "level": "INFO", "app": "TicketSystem"}
+{"message": "Database tables created successfully", "taskName": "Task-2", "timestamp": "2026-02-07T11:02:28.761099", "level": "INFO", "app": "TicketSystem"}
+{"message": "Roles created successfully", "taskName": "Task-2", "timestamp": "2026-02-07T11:02:28.788976", "level": "INFO", "app": "TicketSystem"}
+{"message": "Admin user created: admin/admin", "taskName": "Task-2", "timestamp": "2026-02-07T11:02:29.039294", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 13.25ms", "taskName": "Task-3", "timestamp": "2026-02-07T11:02:29.085660", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/users - 200 - 7.47ms", "taskName": "Task-8", "timestamp": "2026-02-07T11:02:29.099190", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/users/roles - 200 - 36.98ms", "taskName": "Task-13", "timestamp": "2026-02-07T11:02:29.154831", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 9.01ms", "taskName": "Task-18", "timestamp": "2026-02-07T11:02:29.166563", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 5.03ms", "taskName": "Task-23", "timestamp": "2026-02-07T11:02:30.108255", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/users - 200 - 4.13ms", "taskName": "Task-28", "timestamp": "2026-02-07T11:02:30.119461", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/users/roles - 200 - 4.02ms", "taskName": "Task-33", "timestamp": "2026-02-07T11:02:30.125861", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 7.67ms", "taskName": "Task-38", "timestamp": "2026-02-07T11:02:30.136611", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 6.48ms", "taskName": "Task-43", "timestamp": "2026-02-07T11:02:31.797157", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/users - 200 - 4.25ms", "taskName": "Task-48", "timestamp": "2026-02-07T11:02:31.809241", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/users/roles - 200 - 5.9ms", "taskName": "Task-53", "timestamp": "2026-02-07T11:02:31.817943", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 5.93ms", "taskName": "Task-58", "timestamp": "2026-02-07T11:02:31.826846", "level": "INFO", "app": "TicketSystem"}
+{"message": "ACTION: LOGIN_FAILED", "taskName": null, "user_id": null, "action": "LOGIN_FAILED", "details": {"login": "nnurmuhamedov"}, "timestamp": "2026-02-07T11:02:41.761856", "level": "INFO", "app": "TicketSystem"}
+{"message": "POST /api/auth/login - 401 - 5.0ms", "taskName": "Task-63", "timestamp": "2026-02-07T11:02:41.763010", "level": "INFO", "app": "TicketSystem"}
+{"message": "ACTION: USER_REGISTERED", "taskName": null, "user_id": 2, "action": "USER_REGISTERED", "details": {"login": "nnurmuhamedov", "role": "reader"}, "timestamp": "2026-02-07T11:03:00.385884", "level": "INFO", "app": "TicketSystem"}
+{"message": "POST /api/auth/register - 201 - 274.0ms", "taskName": "Task-69", "timestamp": "2026-02-07T11:03:00.387557", "level": "INFO", "app": "TicketSystem"}
+{"message": "ACTION: LOGIN_SUCCESS", "taskName": null, "user_id": 2, "action": "LOGIN_SUCCESS", "details": {"login": "nnurmuhamedov"}, "timestamp": "2026-02-07T11:03:02.903580", "level": "INFO", "app": "TicketSystem"}
+{"message": "POST /api/auth/login - 200 - 264.24ms", "taskName": "Task-75", "timestamp": "2026-02-07T11:03:02.904608", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 5.31ms", "taskName": "Task-81", "timestamp": "2026-02-07T11:03:02.939908", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/users - 200 - 4.87ms", "taskName": "Task-86", "timestamp": "2026-02-07T11:03:02.950596", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/users/roles - 200 - 4.88ms", "taskName": "Task-91", "timestamp": "2026-02-07T11:03:02.958072", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 7.72ms", "taskName": "Task-96", "timestamp": "2026-02-07T11:03:02.968772", "level": "INFO", "app": "TicketSystem"}
+{"message": "ACTION: LOGIN_SUCCESS", "taskName": null, "user_id": 1, "action": "LOGIN_SUCCESS", "details": {"login": "admin"}, "timestamp": "2026-02-07T11:03:14.234972", "level": "INFO", "app": "TicketSystem"}
+{"message": "POST /api/auth/login - 200 - 279.81ms", "taskName": "Task-101", "timestamp": "2026-02-07T11:03:14.236003", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/auth/me - 200 - 0.54ms", "taskName": "Task-107", "timestamp": "2026-02-07T11:03:53.529451", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 11.47ms", "taskName": "Task-112", "timestamp": "2026-02-07T11:03:53.544035", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/tickets/users - 200 - 0.35ms", "taskName": "Task-117", "timestamp": "2026-02-07T11:03:53.551128", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/users - 200 - 6.96ms", "taskName": "Task-122", "timestamp": "2026-02-07T11:03:53.559826", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/users/roles - 200 - 0.74ms", "taskName": "Task-127", "timestamp": "2026-02-07T11:03:53.564759", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/users/roles - 200 - 6.33ms", "taskName": "Task-132", "timestamp": "2026-02-07T11:03:53.573310", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/tickets - 200 - 0.28ms", "taskName": "Task-137", "timestamp": "2026-02-07T11:03:53.576740", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 7.63ms", "taskName": "Task-142", "timestamp": "2026-02-07T11:03:53.586299", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/auth/login - 200 - 0.32ms", "taskName": "Task-147", "timestamp": "2026-02-07T11:04:18.023127", "level": "INFO", "app": "TicketSystem"}
+{"message": "ACTION: LOGIN_SUCCESS", "taskName": null, "user_id": 2, "action": "LOGIN_SUCCESS", "details": {"login": "nnurmuhamedov"}, "timestamp": "2026-02-07T11:04:18.311360", "level": "INFO", "app": "TicketSystem"}
+{"message": "POST /api/auth/login - 200 - 287.85ms", "taskName": "Task-152", "timestamp": "2026-02-07T11:04:18.312549", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 10.14ms", "taskName": "Task-158", "timestamp": "2026-02-07T11:04:21.648532", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/users - 200 - 5.08ms", "taskName": "Task-163", "timestamp": "2026-02-07T11:04:21.660500", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/users/roles - 200 - 4.47ms", "taskName": "Task-168", "timestamp": "2026-02-07T11:04:21.667792", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 6.75ms", "taskName": "Task-173", "timestamp": "2026-02-07T11:04:21.677177", "level": "INFO", "app": "TicketSystem"}
+{"message": "Shutting down TicketSystem", "taskName": "Task-2", "timestamp": "2026-02-07T11:11:07.139254", "level": "INFO", "app": "TicketSystem"}
+{"message": "Starting TicketSystem", "taskName": "Task-2", "timestamp": "2026-02-07T11:11:16.758804", "level": "INFO", "app": "TicketSystem"}
+{"message": "Initializing database tables...", "taskName": "Task-2", "timestamp": "2026-02-07T11:11:16.758999", "level": "INFO", "app": "TicketSystem"}
+{"message": "Database tables created successfully", "taskName": "Task-2", "timestamp": "2026-02-07T11:11:16.817870", "level": "INFO", "app": "TicketSystem"}
+{"message": "Roles already exist", "taskName": "Task-2", "timestamp": "2026-02-07T11:11:16.855459", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 30.89ms", "taskName": "Task-3", "timestamp": "2026-02-07T11:11:22.063644", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/users - 200 - 28.6ms", "taskName": "Task-8", "timestamp": "2026-02-07T11:11:22.203602", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/users/roles - 200 - 26.45ms", "taskName": "Task-13", "timestamp": "2026-02-07T11:11:22.251284", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 74.3ms", "taskName": "Task-18", "timestamp": "2026-02-07T11:11:22.350111", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 22.21ms", "taskName": "Task-23", "timestamp": "2026-02-07T11:11:23.100727", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/users - 200 - 8.2ms", "taskName": "Task-28", "timestamp": "2026-02-07T11:11:23.232065", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/users/roles - 200 - 7.27ms", "taskName": "Task-33", "timestamp": "2026-02-07T11:11:23.280597", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 9.49ms", "taskName": "Task-38", "timestamp": "2026-02-07T11:11:23.332841", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 5.67ms", "taskName": "Task-43", "timestamp": "2026-02-07T11:11:23.731680", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/users - 200 - 5.41ms", "taskName": "Task-48", "timestamp": "2026-02-07T11:11:23.828533", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/users/roles - 200 - 22.86ms", "taskName": "Task-53", "timestamp": "2026-02-07T11:11:23.854175", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 5.35ms", "taskName": "Task-58", "timestamp": "2026-02-07T11:11:23.877328", "level": "INFO", "app": "TicketSystem"}
+{"message": "ACTION: LOGIN_SUCCESS", "taskName": null, "user_id": 1, "action": "LOGIN_SUCCESS", "details": {"login": "admin"}, "timestamp": "2026-02-07T11:11:32.629257", "level": "INFO", "app": "TicketSystem"}
+{"message": "POST /api/auth/login - 200 - 289.41ms", "taskName": "Task-63", "timestamp": "2026-02-07T11:11:32.630236", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 20.29ms", "taskName": "Task-69", "timestamp": "2026-02-07T11:11:32.654207", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 17.4ms", "taskName": "Task-74", "timestamp": "2026-02-07T11:11:32.703467", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/users - 200 - 4.92ms", "taskName": "Task-79", "timestamp": "2026-02-07T11:11:32.714822", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/users/roles - 200 - 4.76ms", "taskName": "Task-84", "timestamp": "2026-02-07T11:11:32.722418", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 5.87ms", "taskName": "Task-89", "timestamp": "2026-02-07T11:11:32.730773", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/users - 200 - 0.29ms", "taskName": "Task-94", "timestamp": "2026-02-07T11:11:34.369722", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/users - 200 - 8.5ms", "taskName": "Task-99", "timestamp": "2026-02-07T11:11:34.379996", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/users/2/role - 200 - 0.37ms", "taskName": "Task-104", "timestamp": "2026-02-07T11:11:45.471818", "level": "INFO", "app": "TicketSystem"}
+{"message": "ACTION: USER_ROLE_CHANGED", "taskName": null, "user_id": 1, "action": "USER_ROLE_CHANGED", "details": {"target_user": "nnurmuhamedov", "old_role": "reader", "new_role": "engineer"}, "timestamp": "2026-02-07T11:11:45.505918", "level": "INFO", "app": "TicketSystem"}
+{"message": "PATCH /api/users/2/role - 200 - 47.39ms", "taskName": "Task-109", "timestamp": "2026-02-07T11:11:45.520647", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/users - 200 - 17.09ms", "taskName": "Task-115", "timestamp": "2026-02-07T11:11:45.554815", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/tickets/roles - 200 - 0.25ms", "taskName": "Task-120", "timestamp": "2026-02-07T11:11:51.786957", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/roles - 200 - 16.28ms", "taskName": "Task-125", "timestamp": "2026-02-07T11:11:51.804659", "level": "INFO", "app": "TicketSystem"}
+{"message": "ACTION: LOGIN_SUCCESS", "taskName": null, "user_id": 2, "action": "LOGIN_SUCCESS", "details": {"login": "nnurmuhamedov"}, "timestamp": "2026-02-07T11:12:05.499492", "level": "INFO", "app": "TicketSystem"}
+{"message": "POST /api/auth/login - 200 - 292.11ms", "taskName": "Task-130", "timestamp": "2026-02-07T11:12:05.515394", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 4.6ms", "taskName": "Task-136", "timestamp": "2026-02-07T11:12:05.523626", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 5.09ms", "taskName": "Task-141", "timestamp": "2026-02-07T11:12:05.554001", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/users - 200 - 4.85ms", "taskName": "Task-146", "timestamp": "2026-02-07T11:12:05.563830", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/users/roles - 200 - 6.42ms", "taskName": "Task-151", "timestamp": "2026-02-07T11:12:05.574284", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 22.53ms", "taskName": "Task-156", "timestamp": "2026-02-07T11:12:05.599288", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/roles - 200 - 4.23ms", "taskName": "Task-161", "timestamp": "2026-02-07T11:12:09.507038", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/tickets - 200 - 0.24ms", "taskName": "Task-166", "timestamp": "2026-02-07T11:12:28.589909", "level": "INFO", "app": "TicketSystem"}
+{"message": "ACTION: TICKET_CREATED", "taskName": null, "user_id": 2, "action": "TICKET_CREATED", "details": {"key": "ASU-1", "title": "\u0422\u0435\u0441\u0442\u043e\u0432\u0430\u044f \u0437\u0430\u0434\u0430\u0447\u0430"}, "timestamp": "2026-02-07T11:12:28.649832", "level": "INFO", "app": "TicketSystem"}
+{"message": "POST /api/tickets - 201 - 62.52ms", "taskName": "Task-171", "timestamp": "2026-02-07T11:12:28.653874", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 5.83ms", "taskName": "Task-177", "timestamp": "2026-02-07T11:12:28.679329", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 21.4ms", "taskName": "Task-182", "timestamp": "2026-02-07T11:12:32.555796", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 5.38ms", "taskName": "Task-187", "timestamp": "2026-02-07T11:12:33.425346", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/tickets/ASU-1 - 200 - 0.25ms", "taskName": "Task-192", "timestamp": "2026-02-07T11:12:33.822309", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/ASU-1 - 200 - 6.66ms", "taskName": "Task-197", "timestamp": "2026-02-07T11:12:33.830183", "level": "INFO", "app": "TicketSystem"}
+{"message": "OPTIONS /api/tickets/ASU-1 - 200 - 0.25ms", "taskName": "Task-202", "timestamp": "2026-02-07T11:12:35.676829", "level": "INFO", "app": "TicketSystem"}
+{"message": "ACTION: TICKET_UPDATED", "taskName": null, "user_id": 2, "action": "TICKET_UPDATED", "details": {"key": "ASU-1"}, "timestamp": "2026-02-07T11:12:35.704605", "level": "INFO", "app": "TicketSystem"}
+{"message": "PATCH /api/tickets/ASU-1 - 200 - 53.69ms", "taskName": "Task-207", "timestamp": "2026-02-07T11:12:35.731731", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 12.82ms", "taskName": "Task-213", "timestamp": "2026-02-07T11:12:35.755266", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 18.25ms", "taskName": "Task-218", "timestamp": "2026-02-07T11:12:39.704319", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 18.22ms", "taskName": "Task-223", "timestamp": "2026-02-07T11:12:40.454974", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 6.06ms", "taskName": "Task-228", "timestamp": "2026-02-07T11:12:40.711479", "level": "INFO", "app": "TicketSystem"}
+{"message": "ACTION: LOGIN_SUCCESS", "taskName": null, "user_id": 1, "action": "LOGIN_SUCCESS", "details": {"login": "admin"}, "timestamp": "2026-02-07T11:12:51.466516", "level": "INFO", "app": "TicketSystem"}
+{"message": "POST /api/auth/login - 200 - 279.52ms", "taskName": "Task-233", "timestamp": "2026-02-07T11:12:51.467639", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 3.44ms", "taskName": "Task-239", "timestamp": "2026-02-07T11:12:51.472911", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 8.04ms", "taskName": "Task-244", "timestamp": "2026-02-07T11:12:51.502341", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/users - 200 - 5.07ms", "taskName": "Task-249", "timestamp": "2026-02-07T11:12:51.512594", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/users/roles - 200 - 5.66ms", "taskName": "Task-254", "timestamp": "2026-02-07T11:12:51.522531", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 5.41ms", "taskName": "Task-259", "timestamp": "2026-02-07T11:12:51.530228", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/ASU-1 - 200 - 6.9ms", "taskName": "Task-264", "timestamp": "2026-02-07T11:12:54.560795", "level": "INFO", "app": "TicketSystem"}
+{"message": "ACTION: LOGIN_SUCCESS", "taskName": null, "user_id": 1, "action": "LOGIN_SUCCESS", "details": {"login": "admin"}, "timestamp": "2026-02-07T11:12:58.964870", "level": "INFO", "app": "TicketSystem"}
+{"message": "POST /api/auth/login - 200 - 277.84ms", "taskName": "Task-269", "timestamp": "2026-02-07T11:12:58.965974", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 3.68ms", "taskName": "Task-275", "timestamp": "2026-02-07T11:12:58.971682", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/auth/me - 200 - 9.55ms", "taskName": "Task-280", "timestamp": "2026-02-07T11:12:59.002334", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/users - 200 - 4.33ms", "taskName": "Task-285", "timestamp": "2026-02-07T11:12:59.011923", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/users/roles - 200 - 6.32ms", "taskName": "Task-290", "timestamp": "2026-02-07T11:12:59.020805", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets - 200 - 5.7ms", "taskName": "Task-295", "timestamp": "2026-02-07T11:12:59.028949", "level": "INFO", "app": "TicketSystem"}
+{"message": "GET /api/tickets/ASU-1 - 200 - 19.13ms", "taskName": "Task-300", "timestamp": "2026-02-07T11:13:01.105016", "level": "INFO", "app": "TicketSystem"}
