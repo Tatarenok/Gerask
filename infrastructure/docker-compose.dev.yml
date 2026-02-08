@@ -1,0 +1,40 @@
+# ══════════════════════════════════════════════════════════════
+# Конфигурация для РАЗРАБОТКИ
+# Использование: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# ══════════════════════════════════════════════════════════════
+
+services:
+  db:
+    ports:
+      - "5432:5432" # Доступ к БД для отладки (DBeaver, pgAdmin)
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../infrastructure/docker/backend.Dockerfile
+    volumes:
+      # Монтируем код для hot reload
+      - ../backend/app:/app/app:ro
+      - backend_uploads:/app/uploads
+      - backend_logs:/app/logs
+    ports:
+      - "8000:8000"
+    environment:
+      DEBUG: "true"
+      LOG_LEVEL: "DEBUG"
+    # Запускаем с автоперезагрузкой
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    # В dev-режиме используем Vite dev server вместо Nginx
+    build:
+      context: ../frontend
+      dockerfile: ../infrastructure/docker/frontend.dev.Dockerfile
+    volumes:
+      - ../frontend/src:/app/src:ro
+      - ../frontend/public:/app/public:ro
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000/api
+    command: npm run dev -- --host

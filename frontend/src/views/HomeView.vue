@@ -1769,7 +1769,7 @@ async function uploadFile(event) {
       headers: { "Content-Type": "multipart/form-data" },
     });
     uploadedFiles.value.push(r.data);
-    const fileUrl = `http://localhost:8001${r.data.url}`;
+    const fileUrl = `http://localhost:8000${r.data.url}`;
     newComment.value += r.data.mime_type?.startsWith("image/")
       ? `\n<img src="${fileUrl}" alt="${r.data.filename}">`
       : `\n<a href="${fileUrl}" target="_blank" class="file-link">📎 ${r.data.filename}</a>`;

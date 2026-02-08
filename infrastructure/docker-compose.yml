@@ -1,0 +1,91 @@
+# ══════════════════════════════════════════════════════════════
+# Базовая конфигурация - общие сервисы
+# ══════════════════════════════════════════════════════════════
+
+services:
+  # ────────────────────────────────────────────────────────────
+  # PostgreSQL
+  # ────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: gerask-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Укажи DB_PASSWORD в .env}
+      POSTGRES_DB: ${DB_NAME:-gerask}
+      # Оптимизация для небольших VPS
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-gerask}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ────────────────────────────────────────────────────────────
+  # Backend (FastAPI)
+  # ────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../infrastructure/docker/backend.Dockerfile
+    container_name: gerask-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD}@db:5432/${DB_NAME:-gerask}
+      SECRET_KEY: ${SECRET_KEY:?Укажи SECRET_KEY в .env}
+      DEBUG: ${DEBUG:-false}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # Для CORS
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost}
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_logs:/app/logs
+    networks:
+      - internal
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ────────────────────────────────────────────────────────────
+  # Frontend (Vue + Nginx)
+  # ────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../infrastructure/docker/frontend.Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+    container_name: gerask-frontend
+    restart: unless-stopped
+    networks:
+      - internal
+    depends_on:
+      - backend
+
+# ══════════════════════════════════════════════════════════════
+# Сети
+# ══════════════════════════════════════════════════════════════
+networks:
+  internal:
+    driver: bridge
+
+# ══════════════════════════════════════════════════════════════
+# Volumes (постоянное хранилище)
+# ══════════════════════════════════════════════════════════════
+volumes:
+  postgres_data:
+    name: gerask-postgres-data
+  backend_uploads:
+    name: gerask-uploads
+  backend_logs:
+    name: gerask-logs

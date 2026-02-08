@@ -1,0 +1,49 @@
+# ══════════════════════════════════════════════════════════════
+# Файлы, которые НЕ копируются в Docker образы
+# ══════════════════════════════════════════════════════════════
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Документация
+README.md
+LICENSE
+docs/
+
+# Локальные окружения
+**/.env
+**/.env.local
+**/venv/
+**/__pycache__/
+**/*.pyc
+
+# Node
+**/node_modules/
+**/npm-debug.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Тесты
+**/tests/
+**/*.test.*
+**/coverage/
+
+# Билды (пересобираем в Docker)
+**/dist/
+**/build/
+
+# Логи и данные (монтируем volumes)
+**/logs/
+**/uploads/
+backups/
+
+# Docker и инфраструктура (не нужны внутри образов)
+infrastructure/
+Makefile
+docker-compose*.yml

@@ -1,0 +1,54 @@
+# ══════════════════════════════════════════════════════════════
+# Traefik Configuration
+# ══════════════════════════════════════════════════════════════
+
+api:
+  dashboard: false # Отключаем в проде (или защищаем паролем)
+
+# ────────────────────────────────────────────────────────────
+# Точки входа
+# ────────────────────────────────────────────────────────────
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+
+  websecure:
+    address: ":443"
+    http:
+      tls: {}
+
+# ────────────────────────────────────────────────────────────
+# Провайдеры конфигурации
+# ────────────────────────────────────────────────────────────
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false # Только сервисы с labels
+    network: internal
+
+# ────────────────────────────────────────────────────────────
+# SSL сертификаты (Let's Encrypt)
+# ────────────────────────────────────────────────────────────
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: "${ACME_EMAIL}" # Твой email
+      storage: /letsencrypt/acme.json
+      httpChallenge:
+        entryPoint: web
+
+# ────────────────────────────────────────────────────────────
+# Логирование
+# ────────────────────────────────────────────────────────────
+log:
+  level: WARN
+
+accessLog:
+  filePath: "/var/log/traefik/access.log"
+  bufferingSize: 100
