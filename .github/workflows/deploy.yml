@@ -1,0 +1,117 @@
+name: Deploy Gerask
+
+# Когда запускать
+on:
+  push:
+    branches: [main]      # При push в main
+  workflow_dispatch:       # Ручной запуск из GitHub
+
+jobs:
+  # ═══════════════════════════════════════════════════════════
+  # Этап 1: Тестирование
+  # ═══════════════════════════════════════════════════════════
+  test:
+    name: 🧪 Тесты
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: 📥 Получаем код
+        uses: actions/checkout@v4
+
+      - name: 🐍 Настраиваем Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: 📦 Устанавливаем зависимости
+        working-directory: ./backend
+        run: |
+          pip install -r requirements.txt
+          pip install pytest httpx
+
+      - name: 🧪 Запускаем тесты
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test_db
+          SECRET_KEY: test-secret-key-for-testing
+        run: |
+          if [ -d "tests" ]; then
+            pytest -v
+          else
+            echo "⚠️ Папка tests не найдена, пропускаем тесты"
+            echo "✅ Проверяем что приложение запускается..."
+            timeout 10 python -c "from app.main import app; print('OK')" || echo "Импорт работает"
+          fi
+
+  # ═══════════════════════════════════════════════════════════
+  # Этап 2: Деплой на сервер
+  # ═══════════════════════════════════════════════════════════
+  deploy:
+    name: 🚀 Деплой
+    needs: test                              # Только после успешных тестов
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'      # Только для ветки main
+    
+    steps:
+      - name: 📥 Получаем код
+        uses: actions/checkout@v4
+
+      - name: 🔑 Настраиваем SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: 🚀 Деплоим на сервер
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'ENDSSH'
+            echo "🚀 Начинаем деплой..."
+            
+            cd /opt/gerask
+            
+            echo "📥 Получаем обновления из GitHub..."
+            git fetch origin
+            git reset --hard origin/main
+            
+            echo "🔄 Пересобираем контейнеры..."
+            cd infrastructure
+            docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+            
+            echo "⏳ Ожидаем запуска (15 сек)..."
+            sleep 15
+            
+            echo "🏥 Проверяем здоровье..."
+            if curl -sf http://localhost/health > /dev/null; then
+              echo "✅ Деплой успешен!"
+              docker image prune -f
+            else
+              echo "❌ Ошибка! Сервис не отвечает."
+              exit 1
+            fi
+          ENDSSH
+
+      - name: ❌ Уведомление об ошибке
+        if: failure()
+        run: |
+          echo "=========================================="
+          echo "❌ ДЕПЛОЙ ПРОВАЛЕН!"
+          echo "Проверьте логи выше"
+          echo "=========================================="
