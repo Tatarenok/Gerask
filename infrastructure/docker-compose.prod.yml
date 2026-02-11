@@ -1,63 +1,14 @@
-# ══════════════════════════════════════════════════════════════
-# Конфигурация для ПРОДАКШНА
-# Использование: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-# ══════════════════════════════════════════════════════════════
-
 services:
-  # ────────────────────────────────────────────────────────────
-  # Traefik - Reverse Proxy + SSL
-  # ────────────────────────────────────────────────────────────
-  traefik:
-    image: traefik:v3.0
-    container_name: gerask-traefik
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: gerask-nginx
     restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./traefik/traefik.yml:/traefik.yml:ro
-      - traefik_certs:/letsencrypt
+      - ./nginx-proxy.conf:/etc/nginx/nginx.conf:ro
     networks:
       - internal
-    command:
-      - "--configFile=/traefik.yml"
-
-  # ────────────────────────────────────────────────────────────
-  # Backend с Traefik labels
-  # ────────────────────────────────────────────────────────────
-  backend:
-    labels:
-      - "traefik.enable=true"
-      # Роутинг API
-      - "traefik.http.routers.backend.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.backend.entrypoints=websecure"
-      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
-      - "traefik.http.services.backend.loadbalancer.server.port=8000"
-      # Health endpoint тоже через API
-      - "traefik.http.routers.backend-health.rule=Host(`${DOMAIN}`) && Path(`/health`)"
-      - "traefik.http.routers.backend-health.entrypoints=websecure"
-      - "traefik.http.routers.backend-health.tls.certresolver=letsencrypt"
-    environment:
-      DEBUG: "false"
-      LOG_LEVEL: "WARNING"
-      ALLOWED_ORIGINS: "https://${DOMAIN}"
-
-  # ────────────────────────────────────────────────────────────
-  # Frontend с Traefik labels
-  # ────────────────────────────────────────────────────────────
-  frontend:
-    labels:
-      - "traefik.enable=true"
-      # Основной роутинг
-      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`)"
-      - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
-      - "traefik.http.services.frontend.loadbalancer.server.port=80"
-      # Сжатие
-      - "traefik.http.middlewares.compress.compress=true"
-      - "traefik.http.routers.frontend.middlewares=compress"
-
-volumes:
-  traefik_certs:
-    name: gerask-traefik-certs
+    depends_on:
+      - frontend
+      - backend
