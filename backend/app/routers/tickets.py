@@ -13,6 +13,8 @@ from app.models.comment import Comment, TicketHistory, Attachment, Notification
 from app.schemas.ticket import TicketCreate, TicketUpdate, TicketStatusUpdate, TicketResponse, TicketList
 from app.routers.auth import get_current_user
 from app.utils.logger import log_action
+from app.models.delete_request import DeleteRequest
+from app.models.ticket_link import TicketLink
 
 import os
 import uuid
@@ -45,11 +47,9 @@ def check_can_edit(user: User):
 
 def check_can_create(user: User):
     """Проверяет, может ли пользователь создавать заявки"""
-    if user.role.is_admin:
-        return
-    if user.role.prefix:
-        return
-    raise HTTPException(status_code=403, detail="Нет прав на создание заявок")
+    # Только читатели не могут создавать заявки
+    if user.role.name == "reader":
+        raise HTTPException(status_code=403, detail="Читатели не могут создавать заявки")
 
 
 def generate_ticket_key(db: Session, role: Role) -> str:
@@ -161,15 +161,14 @@ def get_available_roles(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    if current_user.role.is_admin:
-        roles = db.query(Role).filter(Role.prefix != None).all()
-    elif current_user.role.prefix:
-        roles = [current_user.role]
-    else:
-        roles = []
+    """Получить доступные роли для создания заявок"""
+    # Читатели не могут создавать заявки
+    if current_user.role.name == "reader":
+        return []
     
+    # Все остальные видят все роли с prefix
+    roles = db.query(Role).filter(Role.prefix != None).all()
     return [{"id": r.id, "name": r.name, "prefix": r.prefix, "display_name": r.display_name} for r in roles]
-
 
 @router.get("/users")
 def get_users_for_assign(
@@ -179,6 +178,267 @@ def get_users_for_assign(
     users = db.query(User).filter(User.is_active == True).all()
     return [{"id": u.id, "login": u.login, "display_name": u.display_name} for u in users]
 
+
+
+# ============ ЗАПРОСЫ НА УДАЛЕНИЕ ============
+
+@router.get("/delete-requests")
+def get_delete_requests(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Получить запросы на удаление (для автора и админов)"""
+    if current_user.role.is_admin:
+        requests = db.query(DeleteRequest).filter(
+            DeleteRequest.status == "pending"
+        ).all()
+    else:
+        requests = db.query(DeleteRequest).join(Ticket).filter(
+            Ticket.author_id == current_user.id,
+            DeleteRequest.status == "pending"
+        ).all()
+    
+    return [
+        {
+            "id": req.id,
+            "ticket": {
+                "id": req.ticket.id,
+                "key": req.ticket.key,
+                "title": req.ticket.title,
+                "status": req.ticket.status
+            },
+            "requester": {
+                "id": req.requester.id,
+                "display_name": req.requester.display_name
+            },
+            "created_at": req.created_at.isoformat() if req.created_at else None
+        }
+        for req in requests
+    ]
+
+
+@router.post("/delete-requests/{request_id}/approve")
+def approve_delete_request(
+    request_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Одобрить запрос на удаление"""
+    delete_req = db.query(DeleteRequest).filter(DeleteRequest.id == request_id).first()
+    if not delete_req:
+        raise HTTPException(status_code=404, detail="Запрос не найден")
+    
+    ticket = delete_req.ticket
+    
+    if ticket.author_id != current_user.id and not current_user.role.is_admin:
+        raise HTTPException(status_code=403, detail="Нет прав")
+    
+    ticket_key = ticket.key
+    requester_id = delete_req.requested_by
+    
+    # Удаляем заявку
+    db.query(Comment).filter(Comment.ticket_id == ticket.id).delete()
+    db.query(TicketHistory).filter(TicketHistory.ticket_id == ticket.id).delete()
+    db.query(Attachment).filter(Attachment.ticket_id == ticket.id).delete()
+    db.query(Notification).filter(Notification.ticket_id == ticket.id).delete()
+    db.query(DeleteRequest).filter(DeleteRequest.ticket_id == ticket.id).delete()
+    db.delete(ticket)
+    db.commit()
+    
+    # Уведомляем запросившего
+    create_notification(
+        db, requester_id, None, "DELETE_APPROVED",
+        f"Запрос на удаление заявки {ticket_key} одобрен"
+    )
+    db.commit()
+    
+    log_action(current_user.id, "DELETE_REQUEST_APPROVED", {"key": ticket_key})
+    return {"status": "ok", "message": f"Заявка {ticket_key} удалена"}
+
+
+@router.post("/delete-requests/{request_id}/reject")
+def reject_delete_request(
+    request_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Отклонить запрос на удаление"""
+    delete_req = db.query(DeleteRequest).filter(DeleteRequest.id == request_id).first()
+    if not delete_req:
+        raise HTTPException(status_code=404, detail="Запрос не найден")
+    
+    ticket = delete_req.ticket
+    
+    if ticket.author_id != current_user.id and not current_user.role.is_admin:
+        raise HTTPException(status_code=403, detail="Нет прав")
+    
+    delete_req.status = "rejected"
+    delete_req.resolved_at = datetime.utcnow()
+    delete_req.resolved_by = current_user.id
+    db.commit()
+    
+    create_notification(
+        db, delete_req.requested_by, ticket.id, "DELETE_REJECTED",
+        f"Запрос на удаление заявки {ticket.key} отклонён"
+    )
+    db.commit()
+    
+    log_action(current_user.id, "DELETE_REQUEST_REJECTED", {"key": ticket.key})
+    return {"status": "ok", "message": "Запрос отклонён"}
+
+# ============ СВЯЗИ МЕЖДУ ЗАЯВКАМИ ============
+
+@router.get("/{ticket_key}/links")
+def get_ticket_links(
+    ticket_key: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Получить связи заявки"""
+    ticket = db.query(Ticket).filter(Ticket.key == ticket_key).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Заявка не найдена")
+    
+    # Связи где текущая заявка — источник
+    outgoing = db.query(TicketLink).filter(TicketLink.source_ticket_id == ticket.id).all()
+    # Связи где текущая заявка — цель
+    incoming = db.query(TicketLink).filter(TicketLink.target_ticket_id == ticket.id).all()
+    
+    links = []
+    
+    for link in outgoing:
+        links.append({
+            "id": link.id,
+            "type": link.link_type,
+            "direction": "outgoing",
+            "ticket": {
+                "id": link.target_ticket.id,
+                "key": link.target_ticket.key,
+                "title": link.target_ticket.title,
+                "status": link.target_ticket.status
+            },
+            "created_by": link.creator.display_name if link.creator else None,
+            "created_at": link.created_at.isoformat() if link.created_at else None
+        })
+    
+    for link in incoming:
+        # Инвертируем тип для входящих связей
+        inverted_type = {
+            "blocks": "blocked_by",
+            "blocked_by": "blocks",
+            "parent": "child",
+            "child": "parent",
+            "duplicates": "duplicated_by",
+            "duplicated_by": "duplicates",
+        }.get(link.link_type, link.link_type)
+        
+        links.append({
+            "id": link.id,
+            "type": inverted_type,
+            "direction": "incoming",
+            "ticket": {
+                "id": link.source_ticket.id,
+                "key": link.source_ticket.key,
+                "title": link.source_ticket.title,
+                "status": link.source_ticket.status
+            },
+            "created_by": link.creator.display_name if link.creator else None,
+            "created_at": link.created_at.isoformat() if link.created_at else None
+        })
+    
+    return links
+
+
+@router.post("/{ticket_key}/links")
+def create_ticket_link(
+    ticket_key: str,
+    data: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Создать связь между заявками"""
+    check_can_edit(current_user)
+    
+    source_ticket = db.query(Ticket).filter(Ticket.key == ticket_key).first()
+    if not source_ticket:
+        raise HTTPException(status_code=404, detail="Заявка не найдена")
+    
+    target_key = data.get("target_key")
+    link_type = data.get("link_type", "related")
+    
+    target_ticket = db.query(Ticket).filter(Ticket.key == target_key).first()
+    if not target_ticket:
+        raise HTTPException(status_code=404, detail=f"Заявка {target_key} не найдена")
+    
+    if source_ticket.id == target_ticket.id:
+        raise HTTPException(status_code=400, detail="Нельзя связать заявку с самой собой")
+    
+    # Проверяем, нет ли уже такой связи
+    existing = db.query(TicketLink).filter(
+        ((TicketLink.source_ticket_id == source_ticket.id) & (TicketLink.target_ticket_id == target_ticket.id)) |
+        ((TicketLink.source_ticket_id == target_ticket.id) & (TicketLink.target_ticket_id == source_ticket.id))
+    ).first()
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Связь уже существует")
+    
+    link = TicketLink(
+        source_ticket_id=source_ticket.id,
+        target_ticket_id=target_ticket.id,
+        link_type=link_type,
+        created_by=current_user.id
+    )
+    db.add(link)
+    
+    add_history(db, source_ticket.id, current_user.id, "LINK_ADDED",
+               "Связь", None, f"{link_type} → {target_key}")
+    
+    db.commit()
+    db.refresh(link)
+    
+    return {
+        "id": link.id,
+        "type": link.link_type,
+        "ticket": {
+            "id": target_ticket.id,
+            "key": target_ticket.key,
+            "title": target_ticket.title,
+            "status": target_ticket.status
+        }
+    }
+
+
+@router.delete("/{ticket_key}/links/{link_id}")
+def delete_ticket_link(
+    ticket_key: str,
+    link_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Удалить связь"""
+    check_can_edit(current_user)
+    
+    link = db.query(TicketLink).filter(TicketLink.id == link_id).first()
+    if not link:
+        raise HTTPException(status_code=404, detail="Связь не найдена")
+    
+    ticket = db.query(Ticket).filter(Ticket.key == ticket_key).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Заявка не найдена")
+    
+    # Проверяем что связь относится к этой заявке
+    if link.source_ticket_id != ticket.id and link.target_ticket_id != ticket.id:
+        raise HTTPException(status_code=400, detail="Связь не относится к этой заявке")
+    
+    target_key = link.target_ticket.key if link.source_ticket_id == ticket.id else link.source_ticket.key
+    
+    add_history(db, ticket.id, current_user.id, "LINK_REMOVED",
+               "Связь", f"{link.link_type} → {target_key}", None)
+    
+    db.delete(link)
+    db.commit()
+    
+    return {"status": "ok"}
 
 # ============ ЗАЯВКИ ============
 
@@ -239,8 +499,9 @@ def create_ticket(
         role = db.query(Role).filter(Role.id == ticket_data.role_id).first()
         if not role or not role.prefix:
             raise HTTPException(status_code=400, detail="Invalid role")
-        if not current_user.role.is_admin and current_user.role.id != role.id:
-            raise HTTPException(status_code=403, detail="Нельзя создавать заявки для другой роли")
+        # Убрано: теперь все (кроме читателей) могут создавать заявки любого типа
+        # if not current_user.role.is_admin and current_user.role.id != role.id:
+        #     raise HTTPException(status_code=403, detail="Нельзя создавать заявки для другой роли")
     else:
         if not current_user.role.prefix:
             raise HTTPException(status_code=400, detail="Укажите роль для заявки")
@@ -345,6 +606,100 @@ def update_ticket(
     
     log_action(current_user.id, "TICKET_UPDATED", {"key": ticket_key})
     return ticket
+
+@router.post("/{ticket_key}/request-delete")
+def request_delete_ticket(
+    ticket_key: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Запросить удаление заявки"""
+    ticket = db.query(Ticket).filter(Ticket.key == ticket_key).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Заявка не найдена")
+    
+    # Автор и админ могут удалить сразу
+    if ticket.author_id == current_user.id or current_user.role.is_admin:
+        return {"can_delete": True}
+    
+    # Проверяем, есть ли уже активный запрос от этого пользователя
+    existing = db.query(DeleteRequest).filter(
+        DeleteRequest.ticket_id == ticket.id,
+        DeleteRequest.requested_by == current_user.id,
+        DeleteRequest.status == "pending"
+    ).first()
+    
+    if existing:
+        return {
+            "can_delete": False, 
+            "message": "Вы уже отправили запрос на удаление этой заявки"
+        }
+    
+    # Создаём запрос на удаление
+    delete_request = DeleteRequest(
+        ticket_id=ticket.id,
+        requested_by=current_user.id,
+        status="pending"
+    )
+    db.add(delete_request)
+    
+    # Уведомляем автора
+    if ticket.author_id != current_user.id:
+        create_notification(
+            db, ticket.author_id, ticket.id, "DELETE_REQUEST",
+            f"{current_user.display_name} запросил удаление заявки {ticket.key}"
+        )
+    
+    # Уведомляем всех админов
+    admins = db.query(User).join(Role).filter(Role.is_admin == True).all()
+    for admin in admins:
+        if admin.id != current_user.id and admin.id != ticket.author_id:
+            create_notification(
+                db, admin.id, ticket.id, "DELETE_REQUEST",
+                f"{current_user.display_name} запросил удаление заявки {ticket.key}"
+            )
+    
+    add_history(db, ticket.id, current_user.id, "DELETE_REQUESTED", 
+               None, None, f"{current_user.display_name} запросил удаление")
+    
+    db.commit()
+    
+    log_action(current_user.id, "TICKET_DELETE_REQUESTED", {"key": ticket_key})
+    return {
+        "can_delete": False, 
+        "message": "Запрос на удаление отправлен автору и администраторам"
+    }
+
+@router.delete("/{ticket_key}")
+def delete_ticket(
+    ticket_key: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Удалить заявку (только автор или админ)"""
+    ticket = db.query(Ticket).filter(Ticket.key == ticket_key).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Заявка не найдена")
+    
+    # Проверка прав: только автор или админ
+    if ticket.author_id != current_user.id and not current_user.role.is_admin:
+        raise HTTPException(status_code=403, detail="Нет прав на удаление заявки")
+    
+    # Удаляем связанные данные
+    db.query(Comment).filter(Comment.ticket_id == ticket.id).delete()
+    db.query(TicketHistory).filter(TicketHistory.ticket_id == ticket.id).delete()
+    db.query(Attachment).filter(Attachment.ticket_id == ticket.id).delete()
+    db.query(Notification).filter(Notification.ticket_id == ticket.id).delete()
+    
+    # Удаляем заявку
+    db.delete(ticket)
+    db.commit()
+    
+    log_action(current_user.id, "TICKET_DELETED", {"key": ticket_key})
+    return {"status": "ok", "message": f"Заявка {ticket_key} удалена"}
+
+# ============ ЗАПРОСЫ НА УДАЛЕНИЕ ============
+
 
 
 @router.post("/{ticket_key}/start", response_model=TicketResponse)

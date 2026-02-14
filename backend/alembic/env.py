@@ -1,16 +1,25 @@
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
+from app.models.ticket_link import TicketLink
 import sys
 import os
 
 # Добавляем путь к приложению
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Импортируем базу и модели
 from app.database import Base
-from app.models import *  # Импортируем все модели
+from app.models.user import Role, User
+from app.models.ticket import Ticket
+from app.models.comment import Comment, TicketHistory, Attachment, Notification
+from app.models.delete_request import DeleteRequest
 
 config = context.config
+
+# Читаем URL из настроек приложения
+from app.config import settings
+config.set_main_option('sqlalchemy.url', settings.DATABASE_URL)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

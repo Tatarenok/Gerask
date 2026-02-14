@@ -116,9 +116,9 @@
         <div class="left-panel">
           <v-card class="h-100">
             <v-card-title class="d-flex align-center py-2">
-              <span v-if="viewMode === 'my'"
-                >Мои заявки ({{ tickets.length }})</span
-              >
+              <span v-if="viewMode === 'my'">
+                Мои заявки ({{ myTicketsWithDeleteRequests.length }})
+              </span>
               <span v-else>Все заявки ({{ tickets.length }})</span>
               <v-spacer></v-spacer>
               <v-btn icon size="small" @click="loadTickets">
@@ -166,19 +166,31 @@
 
             <v-divider class="mt-2"></v-divider>
 
+            <!-- Список заявок -->
             <v-list
               density="compact"
-              v-if="tickets.length"
+              v-if="currentTicketsList.length"
               class="tickets-list"
             >
               <v-list-item
-                v-for="t in tickets"
-                :key="t.id"
+                v-for="t in currentTicketsList"
+                :key="t._isDeleteRequest ? 'del-' + t._deleteRequestId : t.id"
                 @click="selectTicket(t)"
-                :class="{ 'bg-blue-lighten-4': cur && cur.key === t.key }"
+                :class="{
+                  'bg-blue-lighten-4':
+                    cur && cur.key === t.key && !t._isDeleteRequest,
+                  'bg-red-lighten-4': t._isDeleteRequest,
+                }"
+                :style="
+                  t._isDeleteRequest ? 'border-left: 4px solid #f44336;' : ''
+                "
               >
                 <template v-slot:prepend>
+                  <v-icon v-if="t._isDeleteRequest" color="red" class="mr-2"
+                    >mdi-delete-alert</v-icon
+                  >
                   <v-chip
+                    v-else
                     size="x-small"
                     :color="statusColor(t.status)"
                     class="mr-2"
@@ -186,20 +198,35 @@
                     {{ statusLabel(t.status) }}
                   </v-chip>
                 </template>
-                <v-list-item-title class="font-weight-bold text-truncate">{{
-                  t.key
-                }}</v-list-item-title>
-                <v-list-item-subtitle class="text-truncate">{{
-                  t.title
-                }}</v-list-item-subtitle>
+                <v-list-item-title
+                  class="font-weight-bold text-truncate"
+                  :class="{ 'text-red': t._isDeleteRequest }"
+                >
+                  {{ t.key }}
+                </v-list-item-title>
+                <v-list-item-subtitle class="text-truncate">
+                  {{ t.title }}
+                </v-list-item-subtitle>
                 <template v-slot:append>
-                  <v-chip size="x-small" :color="priorityColor(t.priority)">
+                  <v-chip v-if="t._isDeleteRequest" size="x-small" color="red">
+                    Запрос удаления
+                  </v-chip>
+                  <v-chip
+                    v-else
+                    size="x-small"
+                    :color="priorityColor(t.priority)"
+                  >
                     {{ priorityLabel(t.priority) }}
                   </v-chip>
                 </template>
               </v-list-item>
             </v-list>
-            <v-card-text v-else class="text-center text-grey">
+
+            <!-- Пустой список -->
+            <v-card-text
+              v-if="!currentTicketsList.length"
+              class="text-center text-grey"
+            >
               <v-icon size="48" color="grey-lighten-1"
                 >mdi-ticket-outline</v-icon
               >
@@ -250,11 +277,54 @@
                       Передать</v-list-item-title
                     >
                   </v-list-item>
+                  <v-divider></v-divider>
+                  <v-list-item @click="confirmDelete">
+                    <v-list-item-title class="text-red">
+                      <v-icon start color="red">mdi-delete</v-icon>
+                      Удалить заявку
+                    </v-list-item-title>
+                  </v-list-item>
                 </v-list>
               </v-menu>
             </v-card-title>
 
             <v-card-text>
+              <!-- Уведомление о запросе на удаление -->
+              <v-alert
+                v-if="selectedDeleteRequest"
+                type="error"
+                class="mb-4"
+                prominent
+              >
+                <div class="d-flex align-center flex-wrap ga-2">
+                  <div class="flex-grow-1">
+                    <div class="font-weight-bold">Запрос на удаление</div>
+                    <div>
+                      {{ selectedDeleteRequest._requester.display_name }}
+                      запросил удаление этой заявки
+                    </div>
+                    <div class="text-caption">
+                      {{ formatDate(selectedDeleteRequest._requestedAt) }}
+                    </div>
+                  </div>
+                  <v-btn
+                    color="white"
+                    variant="elevated"
+                    size="small"
+                    @click="approveDeleteRequest"
+                  >
+                    <v-icon start>mdi-check</v-icon> Удалить
+                  </v-btn>
+                  <v-btn
+                    color="white"
+                    variant="outlined"
+                    size="small"
+                    @click="rejectDeleteRequest"
+                  >
+                    <v-icon start>mdi-close</v-icon> Отклонить
+                  </v-btn>
+                </div>
+              </v-alert>
               <!-- Статус и таймер -->
               <v-row align="center" class="mb-4">
                 <v-col cols="auto">
@@ -403,6 +473,48 @@
                 style="min-height: 60px"
                 v-html="formatDescription(cur.description)"
               ></div>
+
+              <v-divider class="my-4"></v-divider>
+
+              <!-- Связи -->
+              <div class="d-flex align-center mb-2">
+                <div class="text-subtitle-2">Связанные заявки</div>
+                <v-spacer></v-spacer>
+                <v-btn
+                  v-if="canEdit"
+                  size="small"
+                  variant="text"
+                  color="primary"
+                  @click="showAddLink = true"
+                >
+                  <v-icon start>mdi-link-plus</v-icon> Добавить связь
+                </v-btn>
+              </div>
+
+              <div v-if="ticketLinks.length" class="mb-4">
+                <v-chip
+                  v-for="link in ticketLinks"
+                  :key="link.id"
+                  class="ma-1"
+                  :color="linkTypeColor(link.type)"
+                  variant="outlined"
+                  closable
+                  @click="goToTicket(link.ticket.key)"
+                  @click:close.stop="removeLink(link.id)"
+                >
+                  <v-icon start size="small">{{
+                    linkTypeIcon(link.type)
+                  }}</v-icon>
+                  {{ linkTypeLabel(link.type) }}: {{ link.ticket.key }}
+                  <span class="text-caption ml-1"
+                    >({{ link.ticket.title.substring(0, 30)
+                    }}{{ link.ticket.title.length > 30 ? "..." : "" }})</span
+                  >
+                </v-chip>
+              </div>
+              <div v-else class="text-grey text-caption mb-4">
+                Нет связанных заявок
+              </div>
 
               <v-divider class="my-4"></v-divider>
 
@@ -636,12 +748,21 @@
                           mandatory
                           class="mr-2"
                         >
-                          <v-btn value="edit" size="x-small" title="Редактор"
-                            ><v-icon size="small">mdi-pencil</v-icon></v-btn
+                          <v-btn value="edit" size="x-small" title="Редактор">
+                            <v-icon size="small">mdi-pencil</v-icon>
+                          </v-btn>
+                          <v-btn
+                            value="split"
+                            size="x-small"
+                            title="Редактор + Превью"
                           >
-                          <v-btn value="preview" size="x-small" title="Превью"
-                            ><v-icon size="small">mdi-eye</v-icon></v-btn
-                          >
+                            <v-icon size="small"
+                              >mdi-view-split-vertical</v-icon
+                            >
+                          </v-btn>
+                          <v-btn value="preview" size="x-small" title="Превью">
+                            <v-icon size="small">mdi-eye</v-icon>
+                          </v-btn>
                         </v-btn-toggle>
 
                         <v-btn-toggle
@@ -665,84 +786,98 @@
                         </v-btn-toggle>
                       </div>
 
-                      <!-- Редактирование -->
-                      <div
-                        v-show="editorMode === 'edit'"
-                        class="mention-container"
-                      >
-                        <v-card
-                          v-if="showMentionList && filteredMentionUsers.length"
-                          class="mention-dropdown elevation-8"
+                      <!-- Редактор с превью рядом -->
+                      <v-row no-gutters>
+                        <!-- Редактор (всегда виден) -->
+                        <v-col
+                          :cols="editorMode === 'split' ? 6 : 12"
+                          v-show="editorMode !== 'preview'"
                         >
-                          <v-list density="compact" class="py-0">
-                            <v-list-item
-                              v-for="(u, index) in filteredMentionUsers"
-                              :key="u.id"
-                              :class="{ 'bg-primary': mentionIndex === index }"
-                              @click="insertMention(u)"
-                              @mouseenter="mentionIndex = index"
+                          <div class="mention-container">
+                            <v-card
+                              v-if="
+                                showMentionList && filteredMentionUsers.length
+                              "
+                              class="mention-dropdown elevation-8"
                             >
-                              <template v-slot:prepend>
-                                <v-avatar size="28" color="grey-lighten-2">
-                                  <span class="text-caption">{{
-                                    u.display_name?.charAt(0)
-                                  }}</span>
-                                </v-avatar>
-                              </template>
-                              <v-list-item-title
-                                :class="{
-                                  'text-white': mentionIndex === index,
-                                }"
-                                >{{ u.display_name }}</v-list-item-title
-                              >
-                              <v-list-item-subtitle
-                                :class="{
-                                  'text-white': mentionIndex === index,
-                                }"
-                                >@{{ u.login }}</v-list-item-subtitle
-                              >
-                            </v-list-item>
-                          </v-list>
-                        </v-card>
+                              <v-list density="compact" class="py-0">
+                                <v-list-item
+                                  v-for="(u, index) in filteredMentionUsers"
+                                  :key="u.id"
+                                  :class="{
+                                    'bg-primary': mentionIndex === index,
+                                  }"
+                                  @click="insertMention(u)"
+                                  @mouseenter="mentionIndex = index"
+                                >
+                                  <template v-slot:prepend>
+                                    <v-avatar size="28" color="grey-lighten-2">
+                                      <span class="text-caption">{{
+                                        u.display_name?.charAt(0)
+                                      }}</span>
+                                    </v-avatar>
+                                  </template>
+                                  <v-list-item-title
+                                    :class="{
+                                      'text-white': mentionIndex === index,
+                                    }"
+                                    >{{ u.display_name }}</v-list-item-title
+                                  >
+                                  <v-list-item-subtitle
+                                    :class="{
+                                      'text-white': mentionIndex === index,
+                                    }"
+                                    >@{{ u.login }}</v-list-item-subtitle
+                                  >
+                                </v-list-item>
+                              </v-list>
+                            </v-card>
 
-                        <v-textarea
-                          ref="commentInput"
-                          v-model="newComment"
-                          :label="
-                            'Комментарий... (@ для упоминания' +
-                            (mentionSearchText
-                              ? ': ' + mentionSearchText
-                              : '') +
-                            ')'
-                          "
-                          :rows="textareaRows"
-                          hide-details
-                          variant="outlined"
-                          auto-grow
-                          @input="handleInput"
-                          @keydown="handleKeydown"
-                          @blur="hideMentionListDelayed"
-                        ></v-textarea>
-                      </div>
-
-                      <!-- Превью -->
-                      <div
-                        v-show="editorMode === 'preview'"
-                        class="preview-container pa-3 rounded"
-                        :style="{ minHeight: previewMinHeight + 'px' }"
-                      >
-                        <div
-                          v-if="newComment.trim()"
-                          v-html="renderPreview(newComment)"
-                          class="comment-content"
-                        ></div>
-                        <div v-else class="text-grey text-center py-4">
-                          <v-icon>mdi-eye-off</v-icon>
-                          <div class="text-caption mt-1">
-                            Нет контента для превью
+                            <v-textarea
+                              ref="commentInput"
+                              v-model="newComment"
+                              :label="
+                                'Комментарий... (@ для упоминания' +
+                                (mentionSearchText
+                                  ? ': ' + mentionSearchText
+                                  : '') +
+                                ')'
+                              "
+                              :rows="textareaRows"
+                              hide-details
+                              variant="outlined"
+                              auto-grow
+                              @input="handleInput"
+                              @keydown="handleKeydown"
+                              @blur="hideMentionListDelayed"
+                            ></v-textarea>
                           </div>
-                        </div>
-                      </div>
+                        </v-col>
+
+                        <!-- Превью (рядом или отдельно) -->
+                        <v-col
+                          :cols="editorMode === 'split' ? 6 : 12"
+                          v-show="editorMode !== 'edit'"
+                          :class="{ 'pl-2': editorMode === 'split' }"
+                        >
+                          <div
+                            class="preview-container pa-3 rounded h-100"
+                            :style="{ minHeight: previewMinHeight + 'px' }"
+                          >
+                            <div
+                              v-if="newComment.trim()"
+                              v-html="renderPreview(newComment)"
+                              class="comment-content"
+                            ></div>
+                            <div v-else class="text-grey text-center py-4">
+                              <v-icon>mdi-eye-off</v-icon>
+                              <div class="text-caption mt-1">
+                                Нет контента для превью
+                              </div>
+                            </div>
+                          </div>
+                        </v-col>
+                      </v-row>
 
                       <div
                         v-if="uploadedFiles.length"
@@ -895,6 +1030,43 @@
             :disabled="!transferUserId"
             >Передать</v-btn
           >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="showDeleteConfirm" max-width="500">
+      <v-card>
+        <v-card-title :class="canDeleteDirectly ? 'text-red' : 'text-orange'">
+          {{ canDeleteDirectly ? "Удалить заявку?" : "Запросить удаление?" }}
+        </v-card-title>
+        <v-card-text>
+          <p v-if="canDeleteDirectly">
+            Вы действительно хотите удалить заявку
+            <strong>{{ cur?.key }}</strong
+            >?
+          </p>
+          <p v-else>
+            Вы не являетесь автором заявки <strong>{{ cur?.key }}</strong
+            >.
+          </p>
+
+          <p v-if="canDeleteDirectly" class="text-warning">
+            Это действие необратимо. Будут удалены все комментарии, история и
+            файлы.
+          </p>
+          <p v-else class="text-info">
+            Запрос на удаление будет отправлен автору заявки и администраторам.
+          </p>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="showDeleteConfirm = false">Отмена</v-btn>
+          <v-btn
+            :color="canDeleteDirectly ? 'red' : 'orange'"
+            @click="deleteTicket"
+          >
+            {{ canDeleteDirectly ? "Удалить" : "Отправить запрос" }}
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -1061,6 +1233,57 @@
       </v-card>
     </v-dialog>
 
+    <!-- Диалог добавления связи -->
+    <v-dialog v-model="showAddLink" max-width="500">
+      <v-card>
+        <v-card-title>Добавить связь</v-card-title>
+        <v-card-text>
+          <v-autocomplete
+            v-model="newLinkTicketKey"
+            :items="allTicketsForLink"
+            item-title="key"
+            item-value="key"
+            label="Выберите заявку"
+            :loading="loadingTickets"
+            @update:search="searchTickets"
+            no-filter
+            clearable
+          >
+            <template v-slot:item="{ item, props }">
+              <v-list-item v-bind="props">
+                <template v-slot:prepend>
+                  <v-chip
+                    size="x-small"
+                    :color="statusColor(item.raw.status)"
+                    class="mr-2"
+                  >
+                    {{ item.raw.key }}
+                  </v-chip>
+                </template>
+                <v-list-item-title>{{ item.raw.title }}</v-list-item-title>
+              </v-list-item>
+            </template>
+          </v-autocomplete>
+
+          <v-select
+            v-model="newLinkType"
+            :items="linkTypes"
+            item-title="label"
+            item-value="value"
+            label="Тип связи"
+            class="mt-3"
+          ></v-select>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="showAddLink = false">Отмена</v-btn>
+          <v-btn color="primary" @click="addLink" :disabled="!newLinkTicketKey">
+            Добавить
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="3000">{{
       snackbarText
     }}</v-snackbar>
@@ -1072,6 +1295,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 import api from "../api";
+import { marked } from "marked";
 
 const router = useRouter();
 const route = useRoute();
@@ -1092,11 +1316,42 @@ const actionLoading = ref(false);
 const commentLoading = ref(false);
 const activeTab = ref("comments");
 const showAllComments = ref(false);
-const editorMode = ref("edit");
+const editorMode = ref("split");
 const textareaSize = ref("medium");
 
 // Заявки
 const tickets = ref([]);
+const deleteRequests = ref([]);
+// Объединённый список для "Мои заявки": обычные заявки + запросы на удаление
+const myTicketsWithDeleteRequests = computed(() => {
+  // Создаём "псевдо-заявки" из запросов на удаление
+  const deleteRequestTickets = deleteRequests.value.map((req) => ({
+    ...req.ticket,
+    _isDeleteRequest: true,
+    _deleteRequestId: req.id,
+    _requester: req.requester,
+    _requestedAt: req.created_at,
+  }));
+
+  // Убираем дубликаты (если заявка уже есть в моих заявках)
+  const existingKeys = new Set(tickets.value.map((t) => t.key));
+  const uniqueDeleteRequests = deleteRequestTickets.filter(
+    (t) => !existingKeys.has(t.key),
+  );
+
+  // Запросы на удаление показываем первыми
+  return [...uniqueDeleteRequests, ...tickets.value];
+});
+const selectedDeleteRequest = ref(null);
+const deleteRequestsCount = ref(0);
+
+// Текущий список заявок (зависит от viewMode)
+const currentTicketsList = computed(() => {
+  if (viewMode.value === "my") {
+    return myTicketsWithDeleteRequests.value;
+  }
+  return tickets.value;
+});
 const cur = ref(null);
 const comments = ref([]);
 const history = ref([]);
@@ -1116,8 +1371,25 @@ const showAdmin = ref(false);
 const showEditTitle = ref(false);
 const showEditDescription = ref(false);
 const showTransfer = ref(false);
+const showDeleteConfirm = ref(false);
 const showEditComment = ref(false);
 const showImageViewer = ref(false);
+
+const showAddLink = ref(false);
+const ticketLinks = ref([]);
+const newLinkTicketKey = ref(null);
+const newLinkType = ref("related");
+const allTicketsForLink = ref([]);
+const loadingTickets = ref(false);
+
+const linkTypes = [
+  { value: "related", label: "Связано с" },
+  { value: "blocks", label: "Блокирует" },
+  { value: "blocked_by", label: "Заблокировано" },
+  { value: "duplicates", label: "Дублирует" },
+  { value: "parent", label: "Родительская" },
+  { value: "child", label: "Дочерняя" },
+];
 
 // Формы
 const editTitle = ref("");
@@ -1195,6 +1467,21 @@ const isAssignee = computed(() => {
   return cur.value.assignee_id === user.value.id || isAdmin.value;
 });
 
+const canSeeDeleteRequests = computed(() => {
+  if (!user.value) return false;
+  // Автор или админ видят запросы на удаление
+  return (
+    user.value.role.is_admin ||
+    tickets.value.some((t) => t.author?.id === user.value.id)
+  );
+});
+
+const canDeleteDirectly = computed(() => {
+  if (!cur.value || !user.value) return false;
+  // Может удалить напрямую только автор или админ
+  return cur.value.author.id === user.value.id || user.value.role.is_admin;
+});
+
 const textareaRows = computed(
   () => ({ small: 2, medium: 4, large: 8 })[textareaSize.value] || 4,
 );
@@ -1211,14 +1498,12 @@ const hiddenComments = computed(() =>
 
 const filteredMentionUsers = computed(() => {
   const search = mentionSearchText.value.toLowerCase();
-  return users.value
-    .filter(
-      (u) =>
-        !search ||
-        u.display_name?.toLowerCase().includes(search) ||
-        u.login?.toLowerCase().includes(search),
-    )
-    .slice(0, 8);
+  return users.value.filter(
+    (u) =>
+      !search ||
+      u.display_name?.toLowerCase().includes(search) ||
+      u.login?.toLowerCase().includes(search),
+  );
 });
 
 const liveTimer = computed(() => {
@@ -1347,27 +1632,51 @@ function historyLabel(a) {
 
 function renderCommentContent(content) {
   if (!content) return "";
-  let result = content
-    .replace(/\n/g, "<br>")
-    .replace(/@\[([^\]]+)\]/g, '<span class="mention-tag">@$1</span>');
+
+  // Сначала обрабатываем @mentions
+  let result = content.replace(/@\[([^\]]+)\]/g, "%%MENTION:$1%%");
+
+  // Парсим Markdown
+  result = marked.parse(result, { breaks: true });
+
+  // Возвращаем @mentions
+  result = result.replace(
+    /%%MENTION:([^%]+)%%/g,
+    '<span class="mention-tag">@$1</span>',
+  );
+
+  // Обрабатываем картинки для просмотра
   result = result.replace(
     /<img\s+src="([^"]+)"[^>]*>/gi,
     (m, src) =>
       `<span class="thumbnail-wrapper" onclick="window.openImageViewer('${src}')"><img src="${src}" class="thumbnail-img" alt=""><span class="thumbnail-overlay"><span class="thumbnail-icon">🔍</span></span></span>`,
   );
+
   return result;
 }
 
 function renderPreview(content) {
   if (!content) return "";
-  let result = content
-    .replace(/\n/g, "<br>")
-    .replace(/@\[([^\]]+)\]/g, '<span class="mention-tag">@$1</span>');
+
+  // Сначала обрабатываем @mentions
+  let result = content.replace(/@\[([^\]]+)\]/g, "%%MENTION:$1%%");
+
+  // Парсим Markdown
+  result = marked.parse(result, { breaks: true });
+
+  // Возвращаем @mentions
+  result = result.replace(
+    /%%MENTION:([^%]+)%%/g,
+    '<span class="mention-tag">@$1</span>',
+  );
+
+  // Обрабатываем картинки для превью
   result = result.replace(
     /<img\s+src="([^"]+)"[^>]*>/gi,
     (m, src) =>
       `<div class="preview-image-container"><img src="${src}" class="preview-image" alt=""></div>`,
   );
+
   return result;
 }
 
@@ -1466,8 +1775,28 @@ async function loadTickets() {
       if (params.toString()) url += "?" + params.toString();
     }
     tickets.value = (await api.get(url)).data;
+
+    // Загружаем запросы на удаление
+    await loadDeleteRequests();
   } catch (e) {
     notify("Ошибка загрузки", "error");
+  }
+}
+
+async function loadDeleteRequests() {
+  try {
+    deleteRequests.value = (await api.get("/tickets/delete-requests")).data;
+  } catch (e) {
+    deleteRequests.value = [];
+  }
+}
+
+async function loadDeleteRequestsCount() {
+  try {
+    const data = (await api.get("/tickets/delete-requests")).data;
+    deleteRequests.value = data;
+  } catch (e) {
+    // Игнорируем ошибку — возможно нет прав
   }
 }
 
@@ -1479,6 +1808,17 @@ function debouncedSearch() {
 
 async function selectTicket(t) {
   try {
+    // Если это запрос на удаление — сохраняем информацию
+    if (t._isDeleteRequest) {
+      selectedDeleteRequest.value = {
+        id: t._deleteRequestId,
+        _requester: t._requester,
+        _requestedAt: t._requestedAt,
+      };
+    } else {
+      selectedDeleteRequest.value = null;
+    }
+
     const r = await api.get("/tickets/" + t.key);
     cur.value = { ...r.data, assignee_id: r.data.assignee?.id };
     router.push({ name: "Ticket", params: { key: t.key } });
@@ -1486,6 +1826,35 @@ async function selectTicket(t) {
     await loadHistory();
   } catch (e) {
     notify("Ошибка загрузки", "error");
+  }
+}
+
+async function approveDeleteRequest() {
+  if (!selectedDeleteRequest.value) return;
+  try {
+    await api.post(
+      `/tickets/delete-requests/${selectedDeleteRequest.value.id}/approve`,
+    );
+    notify("Заявка удалена", "success");
+    selectedDeleteRequest.value = null;
+    cur.value = null;
+    await loadTickets();
+  } catch (e) {
+    notify(e.response?.data?.detail || "Ошибка", "error");
+  }
+}
+
+async function rejectDeleteRequest() {
+  if (!selectedDeleteRequest.value) return;
+  try {
+    await api.post(
+      `/tickets/delete-requests/${selectedDeleteRequest.value.id}/reject`,
+    );
+    notify("Запрос отклонён", "info");
+    selectedDeleteRequest.value = null;
+    await loadTickets();
+  } catch (e) {
+    notify(e.response?.data?.detail || "Ошибка", "error");
   }
 }
 
@@ -1505,6 +1874,7 @@ async function loadHistory() {
         .catch(() => ({ data: [] }))
     ).data;
 }
+
 async function loadNotifications() {
   try {
     notifications.value = (await api.get("/tickets/notifications")).data;
@@ -1652,6 +2022,32 @@ async function transferTicket() {
   await selectTicket(cur.value);
 }
 
+function confirmDelete() {
+  showDeleteConfirm.value = true;
+}
+
+async function deleteTicket() {
+  try {
+    if (canDeleteDirectly.value) {
+      // Автор/Админ — удаляем сразу
+      await api.delete(`/tickets/${cur.value.key}`);
+      showDeleteConfirm.value = false;
+      notify(`Заявка ${cur.value.key} удалена`, "success");
+      cur.value = null;
+      await loadTickets();
+    } else {
+      // Остальные — отправляем запрос
+      const response = await api.post(
+        `/tickets/${cur.value.key}/request-delete`,
+      );
+      showDeleteConfirm.value = false;
+      notify(response.data.message || "Запрос на удаление отправлен", "info");
+    }
+  } catch (e) {
+    notify(e.response?.data?.detail || "Ошибка", "error");
+  }
+}
+
 function formatText(type) {
   const f = {
     bold: { prefix: "<b>", suffix: "</b>" },
@@ -1689,15 +2085,27 @@ function handleKeydown(event) {
     event.preventDefault();
     mentionIndex.value =
       (mentionIndex.value + 1) % filteredMentionUsers.value.length;
+    scrollToMentionItem(); // Добавь эту строку
   } else if (event.key === "ArrowUp") {
     event.preventDefault();
     mentionIndex.value =
       (mentionIndex.value - 1 + filteredMentionUsers.value.length) %
       filteredMentionUsers.value.length;
+    scrollToMentionItem(); // И эту
   } else if (event.key === "Enter" || event.key === "Tab") {
     event.preventDefault();
     insertMention(filteredMentionUsers.value[mentionIndex.value]);
   } else if (event.key === "Escape") showMentionList.value = false;
+}
+
+function scrollToMentionItem() {
+  setTimeout(() => {
+    const dropdown = document.querySelector(".mention-dropdown .v-list");
+    const activeItem = dropdown?.children[mentionIndex.value];
+    if (activeItem) {
+      activeItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }, 0);
 }
 
 function insertMention(u) {
@@ -1828,6 +2236,120 @@ function logout() {
   authStore.logout();
   router.push("/login");
 }
+
+// ============ СВЯЗИ ============
+
+async function loadTicketLinks() {
+  if (!cur.value) return;
+  try {
+    ticketLinks.value = (await api.get(`/tickets/${cur.value.key}/links`)).data;
+  } catch (e) {
+    ticketLinks.value = [];
+  }
+}
+
+async function searchTickets(search) {
+  if (!search || search.length < 2) {
+    allTicketsForLink.value = [];
+    return;
+  }
+  loadingTickets.value = true;
+  try {
+    const response = await api.get(`/tickets?search=${search}`);
+    // Исключаем текущую заявку
+    allTicketsForLink.value = response.data.filter(
+      (t) => t.key !== cur.value?.key,
+    );
+  } catch (e) {
+    allTicketsForLink.value = [];
+  }
+  loadingTickets.value = false;
+}
+
+async function addLink() {
+  if (!newLinkTicketKey.value || !cur.value) return;
+  try {
+    await api.post(`/tickets/${cur.value.key}/links`, {
+      target_key: newLinkTicketKey.value,
+      link_type: newLinkType.value,
+    });
+    notify("Связь добавлена", "success");
+    showAddLink.value = false;
+    newLinkTicketKey.value = null;
+    newLinkType.value = "related";
+    await loadTicketLinks();
+  } catch (e) {
+    notify(e.response?.data?.detail || "Ошибка", "error");
+  }
+}
+
+async function removeLink(linkId) {
+  if (!cur.value) return;
+  try {
+    await api.delete(`/tickets/${cur.value.key}/links/${linkId}`);
+    notify("Связь удалена", "info");
+    await loadTicketLinks();
+  } catch (e) {
+    notify(e.response?.data?.detail || "Ошибка", "error");
+  }
+}
+
+async function goToTicket(key) {
+  try {
+    // Сбрасываем текущую заявку
+    cur.value = null;
+    ticketLinks.value = [];
+
+    // Загружаем новую
+    const response = await api.get(`/tickets/${key}`);
+    cur.value = { ...response.data, assignee_id: response.data.assignee?.id };
+    router.push({ name: "Ticket", params: { key } });
+
+    // Загружаем связанные данные
+    await loadComments();
+    await loadHistory();
+    await loadTicketLinks();
+  } catch (e) {
+    notify("Ошибка перехода", "error");
+  }
+}
+
+function linkTypeColor(type) {
+  const colors = {
+    related: "primary",
+    blocks: "red",
+    blocked_by: "orange",
+    duplicates: "purple",
+    parent: "teal",
+    child: "cyan",
+  };
+  return colors[type] || "grey";
+}
+
+function linkTypeIcon(type) {
+  const icons = {
+    related: "mdi-link",
+    blocks: "mdi-block-helper",
+    blocked_by: "mdi-cancel",
+    duplicates: "mdi-content-copy",
+    parent: "mdi-arrow-up-bold",
+    child: "mdi-arrow-down-bold",
+  };
+  return icons[type] || "mdi-link";
+}
+
+function linkTypeLabel(type) {
+  const labels = {
+    related: "Связано",
+    blocks: "Блокирует",
+    blocked_by: "Заблокировано",
+    duplicates: "Дублирует",
+    duplicated_by: "Дублируется",
+    parent: "Родитель",
+    child: "Дочерняя",
+  };
+  return labels[type] || type;
+}
 </script>
 
 <style>
@@ -1910,17 +2432,45 @@ function logout() {
 
 .mention-container {
   position: relative;
+  z-index: 10;
+}
+.mention-container {
+  position: relative;
+  z-index: 9999;
 }
 .mention-dropdown {
   position: absolute;
   bottom: 100%;
   left: 0;
   right: 0;
-  max-height: 300px;
-  overflow-y: auto;
-  z-index: 1000;
+  max-height: 240px; /* ~5 элементов */
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  z-index: 99999 !important;
   margin-bottom: 4px;
   border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
+.mention-dropdown .v-list {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Кастомный скроллбар */
+.mention-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+.mention-dropdown::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 8px;
+}
+.mention-dropdown::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 8px;
+}
+.mention-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 .mention-tag {
   background: linear-gradient(135deg, #e3f2fd, #bbdefb);
@@ -2032,5 +2582,102 @@ function logout() {
 }
 .comment-form-card .v-card-text {
   overflow: visible !important;
+}
+.v-tabs {
+  z-index: 1 !important;
+}
+/* Блок комментариев должен быть выше вкладок */
+.v-card {
+  position: relative;
+}
+.v-tabs {
+  z-index: 1 !important;
+}
+.v-window {
+  position: relative;
+  z-index: 1 !important;
+}
+/* Markdown стили */
+.comment-content h1,
+.comment-content h2,
+.comment-content h3,
+.comment-content h4 {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.comment-content h1 {
+  font-size: 1.5em;
+}
+.comment-content h2 {
+  font-size: 1.3em;
+}
+.comment-content h3 {
+  font-size: 1.1em;
+}
+
+.comment-content ul,
+.comment-content ol {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+.comment-content li {
+  margin: 4px 0;
+}
+.comment-content blockquote {
+  border-left: 4px solid #1976d2;
+  margin: 12px 0;
+  padding: 8px 16px;
+  background: #f5f5f5;
+  border-radius: 0 8px 8px 0;
+}
+.comment-content pre {
+  background: #2d2d2d;
+  color: #f8f8f2;
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 12px 0;
+}
+.comment-content code {
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: "Monaco", "Consolas", monospace;
+  font-size: 0.9em;
+}
+.comment-content pre code {
+  background: transparent;
+  padding: 0;
+}
+.comment-content strong {
+  font-weight: 700;
+}
+.comment-content a {
+  color: #1976d2;
+  text-decoration: none;
+}
+.comment-content a:hover {
+  text-decoration: underline;
+}
+.comment-content hr {
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  margin: 16px 0;
+}
+.comment-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 12px 0;
+}
+.comment-content th,
+.comment-content td {
+  border: 1px solid #e0e0e0;
+  padding: 8px 12px;
+  text-align: left;
+}
+.comment-content th {
+  background: #f5f5f5;
+  font-weight: 600;
 }
 </style>

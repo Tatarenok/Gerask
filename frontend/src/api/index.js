@@ -1,7 +1,12 @@
 import axios from 'axios'
 
+// Для dev берёт из .env.development, для prod - из .env.production
+const baseURL = import.meta.env.VITE_API_URL 
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api'  // fallback для прода через nginx proxy
+
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL,
   headers: {
     'Content-Type': 'application/json'
   }
