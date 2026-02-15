@@ -1726,6 +1726,7 @@ async function loadTicketFromUrl() {
       cur.value = { ...r.data, assignee_id: r.data.assignee?.id };
       await loadComments();
       await loadHistory();
+      await loadTicketLinks();
     } catch (e) {
       router.push("/");
       notify("Заявка не найдена", "error");
